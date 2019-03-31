@@ -1,70 +1,79 @@
 <template>
   <v-layout column justify-center align-center>
     <v-flex xs12 sm8 md6>
-      <div class="text-xs-center">
-        <logo />
-        <vuetify-logo />
-      </div>
-      <v-card>
-        <v-card-title class="headline"
-          >Welcome to the Vuetify + Nuxt.js template</v-card-title
-        >
-        <v-card-text>
-          <p>
-            Vuetify is a progressive Material Design component framework for
-            Vue.js. It was designed to empower developers to create amazing
-            applications.
-          </p>
-          <p>
-            For more information on Vuetify, check out the
-            <a href="https://vuetifyjs.com" target="_blank">documentation</a>.
-          </p>
-          <p>
-            If you have questions, please join the official
-            <a href="https://chat.vuetifyjs.com/" target="_blank" title="chat"
-              >discord</a
-            >.
-          </p>
-          <p>
-            Find a bug? Report it on the github
-            <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              title="contribute"
-              >issue board</a
-            >.
-          </p>
-          <p>
-            Thank you for developing with Vuetify and I look forward to bringing
-            more exciting features in the future.
-          </p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
+      <v-card-text>
+        <div class="title">Personalize your Schoters homepage</div>
+      </v-card-text>
+      <v-card-text>
+        <div class="subheading">
+          Pick 5 top scholarship categories that you are interested to help us
+          deliver the most relevant information with your prefrences
+        </div>
+      </v-card-text>
+      <v-layout wrap>
+        <div v-for="category in tempCategories" :key="category.id">
+          <div v-if="!category.selected">
+            <v-chip outline color="#545454" @click="selectCategory(category)">{{
+              category.name
+            }}</v-chip>
           </div>
-          <hr class="my-3" />
-          <a href="https://nuxtjs.org/" target="_blank">Nuxt Documentation</a>
-          <br />
-          <a href="https://github.com/nuxt/nuxt.js" target="_blank"
-            >Nuxt GitHub</a
-          >
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" flat nuxt to="/inspire">Continue</v-btn>
-        </v-card-actions>
-      </v-card>
+          <div v-else>
+            <v-chip
+              text-color="white"
+              color="primary"
+              @click="selectCategory(category)"
+              >{{ category.name }}</v-chip
+            >
+          </div>
+        </div>
+      </v-layout>
+      <div>
+        <v-btn large color="secondary" @click="pushSelectedCategories"
+          >Done</v-btn
+        >
+      </div>
     </v-flex>
+    <v-btn fab fixed bottom right color="secondary">
+      <v-icon>chat_bubble</v-icon>
+    </v-btn>
   </v-layout>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
+import apiClient from '../eventService'
 
 export default {
-  components: {
-    Logo,
-    VuetifyLogo
+  data() {
+    return {
+      tempCategories: []
+    }
+  },
+  async beforeCreate() {
+    const res = await apiClient.get('/categories')
+    this.tempCategories = res.data
+  },
+  methods: {
+    selectCategory(selectedCategory) {
+      this.tempCategories = [
+        ...this.tempCategories.map(category => {
+          if (category.id === selectedCategory.id) {
+            category.selected = !category.selected
+            category.image_url =
+              'https://picsum.photos/385/141?image' +
+              Math.random() * Math.floor(100)
+            return category
+          }
+          return category
+        })
+      ]
+    },
+    pushSelectedCategories() {
+      this.$store.dispatch(
+        'mutateCategories',
+        this.tempCategories.filter(category => category.selected)
+      )
+      this.$router.push('/home')
+    }
   }
 }
 </script>
